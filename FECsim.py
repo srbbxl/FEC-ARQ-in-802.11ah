@@ -23,7 +23,7 @@ def inject_errors(bits, error_count):
 class FECsim:
     def __init__(self):
         # 802.11ah params: K=7, R=1/2
-        self.poly_a = 0o133  # 1011011
+        self.poly_a = 0o132  # 1011011
         self.poly_b = 0o171  # 1111001
 
         # precalc trellis stuff, basically a map for the decoder to move around

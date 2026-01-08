@@ -2,7 +2,7 @@ from FECsim import *
 
 def run_experiment():
     sim = FECsim()
-    data_len = 100  # message length in bits
+    data_len = 5000  # message length in bits
     input_data = np.random.randint(0, 2, data_len)
 
     print(f"FEC test start - data length: {data_len}")
