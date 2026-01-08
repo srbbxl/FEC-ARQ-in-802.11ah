@@ -9,7 +9,7 @@ def run_experiment():
     print(f"FEC test start - data length: {data_len}")
 
     # processing tx
-    scrambled = sim.scrambler(input_data)
+    scrambled = scrambler(input_data)
     encoded = sim.encoder(scrambled)
     total_coded_bits = len(encoded)
 
@@ -26,7 +26,7 @@ def run_experiment():
 
         # 2. decoding
         decoded_scrambled = sim.decoder(noisy_encoded)
-        output_data = sim.scrambler(decoded_scrambled)  # descrambling
+        output_data = scrambler(decoded_scrambled)  # descrambling
 
         # 3. verification
         bit_errors_after_decoding = np.sum(input_data != output_data)
