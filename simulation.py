@@ -1,5 +1,5 @@
 import numpy as np
-from FECsim import FECsim
+from FECsim import *
 
 def run_experiment():
     sim = FECsim()
