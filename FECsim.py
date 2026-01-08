@@ -1,6 +1,5 @@
 import numpy as np
 
-
 def scrambler(bits, seed=0b1011101):
     # scrambler with polynomial x^7 + x^4 + 1
     state = seed
@@ -10,6 +9,15 @@ def scrambler(bits, seed=0b1011101):
         output[i] = bits[i] ^ feedback
         state = ((state << 1) | feedback) & 0x7F
     return output
+
+
+def inject_errors(bits, error_count):
+    # injects given amount of errors in random places
+    corrupted = bits.copy()
+    indices = np.random.choice(len(bits), error_count, replace=False)
+    for idx in indices:
+        corrupted[idx] = 1 - corrupted[idx]  # bit flip (0->1 or 1->0)
+    return corrupted
 
 
 class FECsim:
@@ -93,10 +101,3 @@ class FECsim:
 
         return np.array(decoded[::-1][:-6])  # reverse and cut off tail bits
 
-    def inject_errors(self, bits, error_count):
-        # injects given amount of errors in random places
-        corrupted = bits.copy()
-        indices = np.random.choice(len(bits), error_count, replace=False)
-        for idx in indices:
-            corrupted[idx] = 1 - corrupted[idx]  # bit flip (0->1 or 1->0)
-        return corrupted

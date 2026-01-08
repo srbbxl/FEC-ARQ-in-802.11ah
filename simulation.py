@@ -1,4 +1,3 @@
-import numpy as np
 from FECsim import *
 
 def run_experiment():
@@ -22,7 +21,7 @@ def run_experiment():
     # checking from 0 to 15 errors
     for errors_inserted in range(0, 16):
         # 1. channel with errors
-        noisy_encoded = sim.inject_errors(encoded, errors_inserted)
+        noisy_encoded = inject_errors(encoded, errors_inserted)
 
         # 2. decoding
         decoded_scrambled = sim.decoder(noisy_encoded)
