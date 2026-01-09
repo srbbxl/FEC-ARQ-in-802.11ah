@@ -1,20 +1,26 @@
 from FECsim import *
+import sys
+import numpy
+
+
+numpy.set_printoptions(threshold=sys.maxsize)
 
 
 def run_experiment():
     sim = FECsim()
-    data_len = 100  # dlugosc wiadomosci w bitach
+    data_len = 5000  # dlugosc wiadomosci w bitach
     # generuje losowe dane (zera i jedynki)
     input_data = np.random.randint(0, 2, data_len)
 
     print(f"Start testu FEC - dlugosc danych: {data_len}")
 
-    # przetwarzanie nadawcze (TX chain)
-    # 1. wybielanie danych (scrambling)
+    # wybielanie danych (scrambling)
     scrambled = scrambler(input_data)
-    # 2. kodowanie kanalowe (dodaje nadmiarowosc)
+    print(scrambled)
+    # kodowanie kanalowe (dodaje nadmiarowosc)
     encoded = sim.encoder(scrambled)
     total_coded_bits = len(encoded)
+    print(encoded)
 
     print(f"bity po zakodowaniu: {total_coded_bits} (nadmiarowosc ~2x)")
     print("-" * 60)
@@ -24,10 +30,10 @@ def run_experiment():
     # testowanie rosnacej ilosci bledow w kanale
     # sprawdzamy od 0 do 15 bledow
     for errors_inserted in range(0, 16):
-        # 1. kanal z bledami (symulacja powietrza/zaklocen)
+        # kanal z bledami (symulacja powietrza/zaklocen)
         noisy_encoded = inject_errors(encoded, errors_inserted)
 
-        # 2. dekodowanie (RX chain)
+        # dekodowanie
         # najpierw viterbi probuje naprawic bity
         decoded_scrambled = sim.decoder(noisy_encoded)
         # potem odszyfrowanie (descrambling)
@@ -38,7 +44,7 @@ def run_experiment():
         bit_errors_after_decoding = np.sum(input_data != output_data)
 
         # ocena skutecznosci
-        status = "IDEALNIE" if bit_errors_after_decoding == 0 else "DEKODER PADL"
+        status = "BEZ BLEDOW" if bit_errors_after_decoding == 0 else "DEKODER PADL"
 
         print(f"{errors_inserted:<15} | {bit_errors_after_decoding:<15} | {status}")
 

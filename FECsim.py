@@ -17,7 +17,7 @@ def inject_errors(bits, error_count):
 
 
 # mieszanie bitow w celu unikniecia dlugich ciagow zer i jedynek - dziala w dwie strony (kodowanie i odkodowanie)
-def scrambler(bits, seed=0b1011101):
+def scrambler(bits, seed=0b101110):
     # scrambler z wielomianem x^7 + x^4 + 1
     # wykorzystuje rejestr przesuwny (LFSR)
     state = seed
@@ -25,8 +25,8 @@ def scrambler(bits, seed=0b1011101):
 
     for i in range(len(bits)):
         # obliczamy bit sprzezenia zwrotnego (feedback) na podstawie wielomianu
-        # state >> 6 wyciaga 7. bit (reprezentuje x^7)
-        # state >> 3 wyciaga 4. bit (reprezentuje x^4)
+        # state >> 6 wyciaga 7 bit (reprezentuje x^7)
+        # state >> 3 wyciaga 4 bit (reprezentuje x^4)
         # ^ to operacja XOR (dodawanie modulo 2)
         # & 1 maskuje wynik zeby miec pewnosc ze to pojedynczy bit (0 lub 1)
         feedback = ((state >> 6) ^ (state >> 3)) & 1
@@ -44,12 +44,11 @@ def scrambler(bits, seed=0b1011101):
 
 class FECsim:
     def __init__(self):
-        # parametry 802.11ah: K=7 (dlugosc ograniczenia), R=1/2 (poziom nadmiarowosci)
-        # te liczby definiuja polaczenia wewnatrz kodera splotowego
-        self.poly_a = 0o133  # 1011011 binarnie
-        self.poly_b = 0o171  # 1111001 binarnie
+        # wielomiany generujace
+        self.g1 = 0o133  # 1011011 binarnie
+        self.g2 = 0o171  # 1111001 binarnie
 
-        # prekalkulacja kratownicy dla dekodera, w sumie to taka mapa
+        # prekalkulacja kratownicy dla dekodera, to taka mapa
         # po ktorej dekoder sie rusza
         # next_state - jak jestes w stanie X i przyjdzie bit Y, to gdzie idziesz?
         self.trellis_next_state = np.zeros((64, 2), dtype=int)
@@ -72,14 +71,14 @@ class FECsim:
                 # tworzy tymczasowy "pelny" rejestr (7 bitow) zeby policzyc wyjscie
                 full_reg = (state << 1) | bit
 
-                # obliczanie parzystosci dla wielomianu A
+                # obliczanie parzystosci dla wielomianu g1
                 # AND z maska wielomianu wybiera odpowiednie bity
                 # count('1') zlicza jedynki
                 # % 2 daje wynik modulo 2 (czyli parzystosc)
-                out_a = bin(full_reg & self.poly_a).count('1') % 2
+                out_a = bin(full_reg & self.g1).count('1') % 2
 
-                # to samo dla wielomianu B
-                out_b = bin(full_reg & self.poly_b).count('1') % 2
+                # to samo dla wielomianu g2
+                out_b = bin(full_reg & self.g2).count('1') % 2
 
                 # zapisuje wynik do tablic lookup table
                 self.trellis_next_state[state][bit] = next_state
@@ -99,9 +98,9 @@ class FECsim:
             # wsuwa bit do rejestru
             full_reg = (state << 1) | bit
 
-            # liczy bity wyjsciowe tak samo jak przy budowaniu trellis
-            out_a = bin(full_reg & self.poly_a).count('1') % 2
-            out_b = bin(full_reg & self.poly_b).count('1') % 2
+            # liczy bity wyjsciowe tak samo jak przy budowaniu tablicy
+            out_a = bin(full_reg & self.g1).count('1') % 2
+            out_b = bin(full_reg & self.g2).count('1') % 2
 
             encoded.extend([out_a, out_b])
 
@@ -185,3 +184,19 @@ class FECsim:
         # lista jest od tylu, wiec trzeba ja odwrocic
         # i uciac 6 ostatnich bitow, bo to tylko tail bits (smieci techniczne)
         return np.array(decoded[::-1][:-6])
+
+
+
+    #1. wytluaczyc co sie dzieje w tej czarnej skrzynce (dekoder)
+    #2. jakie sa parametry tego kodu
+    #3. wykonanie badania i przedstawienie wynikow
+    #4. umiec tlumaczyc
+    #5. jakie sa dlugosci/wielkosci ramek, z ktorymi mamy do czynienia (dlugosci minimalna i maksymalna)
+    #6. mozliwosci korekcji kodu
+    #7. klasy bledow przy korekcji
+    #8. zrobic badanie
+    #9. maja umiec wyjasnic dzialanie
+    #10. parametry kodu/mozliwosc korygowania
+    #11. uzupelnic cele projektu (problem statement, ale zrobic to sensownie a nie na pale)
+    #12. recznie napisac co jest naszym celem, we wnioskach wspomniec na ile sie badanie udalo
+    #13.
