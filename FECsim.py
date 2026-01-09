@@ -1,5 +1,26 @@
 import numpy as np
 
+
+def inject_errors(bits, error_count):
+    # wstrzykuje zadana ilosc bledow w losowe miejsca
+    corrupted = bits.copy()
+    indices = np.random.choice(len(bits), error_count, replace=False)
+    for idx in indices:
+        corrupted[idx] = 1 - corrupted[idx]  # bit flip (0->1 albo 1->0)
+    return corrupted
+
+
+def scrambler(bits, seed=0b1011101):
+    # scrambler z wielomianem x^7 + x^4 + 1
+    state = seed
+    output = np.zeros_like(bits)
+    for i in range(len(bits)):
+        feedback = ((state >> 6) ^ (state >> 3)) & 1
+        output[i] = bits[i] ^ feedback
+        state = ((state << 1) | feedback) & 0x7F
+    return output
+
+
 class FECsim:
     def __init__(self):
         # parametry 802.11ah: K=7, R=1/2
@@ -22,16 +43,6 @@ class FECsim:
                 out_b = bin(full_reg & self.poly_b).count('1') % 2
                 self.trellis_next_state[state][bit] = next_state
                 self.trellis_output[state][bit] = (out_a << 1) | out_b
-
-    def scrambler(self, bits, seed=0b1011101):
-        # scrambler z wielomianem x^7 + x^4 + 1
-        state = seed
-        output = np.zeros_like(bits)
-        for i in range(len(bits)):
-            feedback = ((state >> 6) ^ (state >> 3)) & 1
-            output[i] = bits[i] ^ feedback
-            state = ((state << 1) | feedback) & 0x7F
-        return output
 
     def encoder(self, bits):
         # koder splotowy
@@ -91,11 +102,3 @@ class FECsim:
             state = prev
 
         return np.array(decoded[::-1][:-6])  # odwroc i utnij tail bits
-
-    def inject_errors(self, bits, error_count):
-        # wstrzykuje zadana ilosc bledow w losowe miejsca
-        corrupted = bits.copy()
-        indices = np.random.choice(len(bits), error_count, replace=False)
-        for idx in indices:
-            corrupted[idx] = 1 - corrupted[idx]  # bit flip (0->1 albo 1->0)
-        return corrupted

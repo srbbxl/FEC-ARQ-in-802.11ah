@@ -9,7 +9,7 @@ def run_experiment():
     print(f"Start testu FEC - dlugosc danych: {data_len}")
 
     # przetwarzanie nadawcze
-    scrambled = sim.scrambler(input_data)
+    scrambled = scrambler(input_data)
     encoded = sim.encoder(scrambled)
     total_coded_bits = len(encoded)
 
@@ -22,11 +22,11 @@ def run_experiment():
     # sprawdzamy od 0 do 15 bledow
     for errors_inserted in range(0, 16):
         # 1. kanal z bledami
-        noisy_encoded = sim.inject_errors(encoded, errors_inserted)
+        noisy_encoded = inject_errors(encoded, errors_inserted)
 
         # 2. dekodowanie
         decoded_scrambled = sim.decoder(noisy_encoded)
-        output_data = sim.scrambler(decoded_scrambled)  # descrambling
+        output_data = scrambler(decoded_scrambled)  # descrambling
 
         # 3. weryfikacja
         bit_errors_after_decoding = np.sum(input_data != output_data)
