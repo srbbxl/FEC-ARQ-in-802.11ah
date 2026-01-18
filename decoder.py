@@ -63,11 +63,33 @@ class Decoder:
             # nowe koszty (metryki) na ten krok
             new_path_metrics = np.full(self.num_states, 99999999.9)
 
-            # pętla po możliwych stanach
-            for state in range(self.num_states):
-                pass
+            # pętla po stanach
+            for prev_state in range(self.num_states):
+                # jeśli koszt dotarcia jest nieskończony, olewamy stan
+                if path_metrics[prev_state] >= 99999999.9:
+                    continue
+
+                # sprawdzamy dwie gałęzie (bity 0 i 1)
+                for input_bit in [0, 1]:
+                    # destynacja
+                    next_state = self.next_state_table[prev_state][input_bit]
+
+                    # oczekiwanie
+                    expected_output = self.output_table[prev_state][input_bit]
+
+                    # obliczamy koszt (odległość Hamminga), porównujemy z odebraną parą oczekiwaną
+                    # XOR tam gdzie jest różnica, suma to ilość różnic
+                    branch_metric = np.sum(recieved_pair ^ expected_output)
+
+                    # całkowity koszt ścieżki
+                    new_metric = path_metrics[prev_state] + branch_metric
+
+                    # czy znaleziona ścieżka jest lepsza:
+                    if new_metric < new_path_metrics[next_state]:
+                        new_path_metrics[next_state] = new_metric
+
+                        #zapisujemy STAN w historii jeśli był lepszy, natomiast bit odzyskamy później
+                        trellis[x][next_state] = prev_state
+
 
             path_metrics = new_path_metrics
-
-
-print(np.zeros((3, 64), dtype=int))
