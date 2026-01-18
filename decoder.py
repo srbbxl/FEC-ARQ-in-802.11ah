@@ -1,5 +1,7 @@
 import numpy as np
 
+from encoder import ConvolutionalEncoder
+
 def int_to_bits(num, length):
     binary_string = np.binary_repr(num, width=length)
     return np.array([int(x) for x in binary_string], dtype=int)
@@ -35,11 +37,3 @@ class Decoder:
                 new_state_bits = self.encoder.state
                 new_state_int = int("".join(str(x) for x in new_state_bits), 2)
                 self.next_state_table[state][input_bit] = new_state_int
-
-
-    def test(self):
-        bit_state = int_to_bits(1, self.encoder.constraint - 1)
-        print(bit_state)
-
-decoder = Decoder()
-decoder.test()

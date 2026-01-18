@@ -1,6 +1,6 @@
 import numpy as np
 
-class Encoder:
+class ConvolutionalEncoder:
     def __init__(self, bits):
         # parametry standardu
         self.constraint = 7 # K
@@ -36,5 +36,5 @@ class Encoder:
         corrupted_bits = self.bits ^ noise
         return corrupted_bits
 
-encoder = Encoder([1, 0, 1, 0, 1, 1])
+encoder = ConvolutionalEncoder([1, 0, 1, 0, 1, 1])
 print(encoder.apply_noise(1/2))
