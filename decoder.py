@@ -52,7 +52,7 @@ class Decoder:
         path_metrics[0] = 0
 
         # trellis (kratownica) - tu zapisujemy decyzje 0 albo 1
-        # wymiar: [czas][stan] -> bit wejściowy, ktory nas tutaj doprowadził
+        # tu zapisujemy POPRZEDNI STAN (skąd przybyliśmy), a nie bit wejściowy
         trellis = np.zeros((n_steps, self.num_states), dtype=int)
 
         # pętla po krokach
