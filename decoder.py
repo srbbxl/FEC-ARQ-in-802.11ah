@@ -1,4 +1,5 @@
 import numpy as np
+from numpy import dtype
 
 from encoder import ConvolutionalEncoder
 
@@ -37,3 +38,36 @@ class Decoder:
                 new_state_bits = self.encoder.state
                 new_state_int = int("".join(str(x) for x in new_state_bits), 2)
                 self.next_state_table[state][input_bit] = new_state_int
+
+    def decode(self, recieved_bits):
+        # sprawdzamy długośc, musi być podzielna przez 2, bo rate 1/2
+        if recieved_bits % 2 != 0:
+            recieved_bits = recieved_bits[:-1]
+
+        # ilosc krokow czasowych
+        n_steps = len(recieved_bits) // 2
+
+        # koszty (metryki) - stan zero ma koszt 0, reszta nieskonczonosc
+        path_metrics = np.full(self.num_states, 99999999.9)
+        path_metrics[0] = 0
+
+        # trellis (kratownica) - tu zapisujemy decyzje 0 albo 1
+        # wymiar: [czas][stan] -> bit wejściowy, ktory nas tutaj doprowadził
+        trellis = np.zeros((n_steps, self.num_states), dtype=int)
+
+        # pętla po krokach
+        for x in range(n_steps):
+            # pobieramy parę bitów z odebranego sygnału
+            recieved_pair = recieved_bits[x * 2:x * 2 + 2]
+
+            # nowe koszty (metryki) na ten krok
+            new_path_metrics = np.full(self.num_states, 99999999.9)
+
+            # pętla po możliwych stanach
+            for state in range(self.num_states):
+                pass
+
+            path_metrics = new_path_metrics
+
+
+print(np.zeros((3, 64), dtype=int))
