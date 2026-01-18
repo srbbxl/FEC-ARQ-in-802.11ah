@@ -1,7 +1,4 @@
 import numpy as np
-from numpy import dtype
-
-from encoder import ConvolutionalEncoder
 
 def int_to_bits(num, length):
     binary_string = np.binary_repr(num, width=length)
@@ -19,6 +16,9 @@ class Decoder:
         # tabela wyjsc [stan_obecny][wejscie] -> [bit_a][bit_b]
         # dwa razy dluzsze, bo rate 1/2
         self.output_table = np.zeros((self.num_states, 2, 2), dtype=int)
+
+        # bity wejsciowe
+        self.input_bit_table = np.zeros((self.num_states, self.num_states), dtype=int)
 
         # mapa mozliwych przejsc
         for state in range(self.num_states):
@@ -39,13 +39,13 @@ class Decoder:
                 new_state_int = int("".join(str(x) for x in new_state_bits), 2)
                 self.next_state_table[state][input_bit] = new_state_int
 
-    def decode(self, recieved_bits):
+    def decode(self, received_bits):
         # sprawdzamy długośc, musi być podzielna przez 2, bo rate 1/2
-        if recieved_bits % 2 != 0:
-            recieved_bits = recieved_bits[:-1]
+        if received_bits % 2 != 0:
+            received_bits = received_bits[:-1]
 
         # ilosc krokow czasowych
-        n_steps = len(recieved_bits) // 2
+        n_steps = len(received_bits) // 2
 
         # koszty (metryki) - stan zero ma koszt 0, reszta nieskonczonosc
         path_metrics = np.full(self.num_states, 99999999.9)
@@ -58,7 +58,7 @@ class Decoder:
         # pętla po krokach
         for x in range(n_steps):
             # pobieramy parę bitów z odebranego sygnału
-            recieved_pair = recieved_bits[x * 2:x * 2 + 2]
+            received_pair = received_bits[x * 2:x * 2 + 2]
 
             # nowe koszty (metryki) na ten krok
             new_path_metrics = np.full(self.num_states, 99999999.9)
@@ -79,7 +79,7 @@ class Decoder:
 
                     # obliczamy koszt (odległość Hamminga), porównujemy z odebraną parą oczekiwaną
                     # XOR tam gdzie jest różnica, suma to ilość różnic
-                    branch_metric = np.sum(recieved_pair ^ expected_output)
+                    branch_metric = np.sum(received_pair ^ expected_output)
 
                     # całkowity koszt ścieżki
                     new_metric = path_metrics[prev_state] + branch_metric
@@ -91,5 +91,25 @@ class Decoder:
                         #zapisujemy STAN w historii jeśli był lepszy, natomiast bit odzyskamy później
                         trellis[x][next_state] = prev_state
 
-
             path_metrics = new_path_metrics
+
+        # dekodowany sygnał
+        decoded_bits = []
+
+        # bierzemy stan z najmniejszym błędem na końcu
+        current_state = np.argmin(path_metrics)
+
+        # traceback od końca do początku (szukaj swego wątku) (pw hnl reference)
+        for x in range(n_steps - 1, -1, -1):
+            # patrzymy w trellis, stamtąd przeszliśmy do current_state w kroku x
+            prev_state = trellis[x][current_state]
+
+            # bit, który przeniósł nas z prev do current
+            bit = self.input_bit_table[prev_state][current_state]
+            decoded_bits.append(bit)
+
+            # cofamy się
+            current_state = prev_state
+
+        # odwracamy listę dekodowanego sygnału
+        return np.array(decoded_bits[::-1])
