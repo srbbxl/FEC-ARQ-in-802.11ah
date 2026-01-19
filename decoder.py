@@ -5,10 +5,10 @@ def int_to_bits(num, length):
     return np.array([int(x) for x in binary_string], dtype=int)
 
 class Decoder:
-    def __init__(self, encoder):
-        self.encoder = encoder
+    def __init__(self, encoder_instance):
+        self.encoder = encoder_instance
         # ilosc mozliwych stanow (2^6 = 64)
-        self.num_states = 2 ** (encoder.constraint - 1)
+        self.num_states = 2 ** (encoder_instance.constraint - 1)
 
         # tabela przejść [stan_obecny][wejscie] -> stan_nastepny
         self.next_state_table = np.zeros((self.num_states, 2), dtype=int)
