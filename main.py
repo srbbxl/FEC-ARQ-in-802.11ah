@@ -14,37 +14,34 @@ def apply_channel_noise(encoded_bits, ber):
 
 
 if __name__ == "__main__":
-    # 1. Odpalamy maszyny
     enc = ConvolutionalEncoder()
     dec = Decoder(enc)
 
-    # 2. Generujemy losowe dane (np. 100 bitów)
+    # generacja losowych danych
     input_data = np.random.randint(0, 2, 100)
     print(f"Dane wejsciowe: {input_data[:15]}... (dlugosc: {len(input_data)})")
 
-    # WAŻNE: Dodajemy "Tail Bits" (Padding).
-    # Musimy dorzucic 6 zer (K-1), zeby Viterbi mogl ladnie zakonczyc prace na stanie 0.
-    # Jak tego nie zrobisz, ostatnie bity beda z dupy.
+    # dodanie tail bits, aby wyczyscic rejestr po operacji
     padding = np.zeros(enc.constraint - 1, dtype=int)
     data_with_padding = np.concatenate((input_data, padding))
 
     # kodowanie
-    enc.reset()  # dla pewnosci czyscimy
+    enc.reset()  # dla pewnosci czyszczenie rejestru
     encoded_signal = enc.encode(data_with_padding)
-    print(f"Zakodowane: {encoded_signal[:20]}... (dlugosc: {len(encoded_signal)})")
+    print(f"zakodowane: {encoded_signal[:20]} (dlugosc: {len(encoded_signal)})")
 
-    # wprowadzamy błędy
+    # wprowadzanie błędóœ do sygnału
     BER = 0.05  # 5% szans ze cos nie zadziała
     received_signal = apply_channel_noise(encoded_signal, BER)
 
-    # zlicza ile bledow wpadlo
+    # zliczanie ilości błędów
     errors = np.sum(encoded_signal != received_signal)
-    print(f"kanal dorzucil {errors} bledow")
+    print(f"Kanal dorzucil {errors} bledow.")
 
     # dekodowanie viterbiego
     decoded_full = dec.decode(received_signal)
 
-    # odcinamy 6 zer, ktore byly dodane do wyczyszczenia rejestru
+    # odcięcie tail bits
     decoded_data = decoded_full[:len(input_data)]
 
     print(f"Zdekodowane: {decoded_data[:15]}...")
@@ -54,6 +51,6 @@ if __name__ == "__main__":
 
     print("-" * 30)
     if bit_errors == 0:
-        print(f"SUKCES - wsyzstko odzyskane")
+        print(f"SUKCES - sygnał zdekodowany prawidłowo")
     else:
-        print(f"Dekodowanie w pełni nie udało się - postalo {bit_errors} bledow")
+        print(f"Odebrane bity nie zostały poprawnie zdekodowane. Ilość błędów: {bit_errors}")
