@@ -1,8 +1,9 @@
-from FECsim import *
-
+import numpy as np
+from v1.FECsim import FECsim
+# unused files
 def run_experiment():
     sim = FECsim()
-    data_len = 5000  # message length in bits
+    data_len = 100  # message length in bits
     input_data = np.random.randint(0, 2, data_len)
 
     print(f"FEC test start - data length: {data_len}")
@@ -21,7 +22,7 @@ def run_experiment():
     # checking from 0 to 15 errors
     for errors_inserted in range(0, 16):
         # 1. channel with errors
-        noisy_encoded = inject_errors(encoded, errors_inserted)
+        noisy_encoded = sim.inject_errors(encoded, errors_inserted)
 
         # 2. decoding
         decoded_scrambled = sim.decoder(noisy_encoded)

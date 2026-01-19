@@ -1,5 +1,6 @@
 import numpy as np
-#unused version
+# unused files
+
 def scrambler(bits, seed=0b1011101):
     # scrambler with polynomial x^7 + x^4 + 1
     state = seed
@@ -11,19 +12,10 @@ def scrambler(bits, seed=0b1011101):
     return output
 
 
-def inject_errors(bits, error_count):
-    # injects given amount of errors in random places
-    corrupted = bits.copy()
-    indices = np.random.choice(len(bits), error_count, replace=False)
-    for idx in indices:
-        corrupted[idx] = 1 - corrupted[idx]  # bit flip (0->1 or 1->0)
-    return corrupted
-
-
 class FECsim:
     def __init__(self):
         # 802.11ah params: K=7, R=1/2
-        self.poly_a = 0o132  # 1011011
+        self.poly_a = 0o133  # 1011011
         self.poly_b = 0o171  # 1111001
 
         # precalc trellis stuff, basically a map for the decoder to move around
@@ -101,3 +93,10 @@ class FECsim:
 
         return np.array(decoded[::-1][:-6])  # reverse and cut off tail bits
 
+    def inject_errors(self, bits, error_count):
+        # injects given amount of errors in random places
+        corrupted = bits.copy()
+        indices = np.random.choice(len(bits), error_count, replace=False)
+        for idx in indices:
+            corrupted[idx] = 1 - corrupted[idx]  # bit flip (0->1 or 1->0)
+        return corrupted
