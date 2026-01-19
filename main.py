@@ -4,52 +4,56 @@ from decoder import Decoder
 
 
 def apply_channel_noise(encoded_bits, ber):
-    """
-    Symuluje kanał szumów (BSC).
-    Zamienia bity (0->1, 1->0) z prawdopodobieństwem BER.
-    """
-    # Losujemy liczby 0-1 dla każdego bitu
+    # losujemy wartosci 0-1 dla kazdego bitu
     random_vals = np.random.rand(len(encoded_bits))
-    # Tworzymy maskę błędów (gdzie < BER, tam błąd)
+    # maska bledow: tam gdzie wylosowalo mniej niz BER, tam jebnie błąd
     error_mask = (random_vals < ber).astype(int)
-    # Aplikujemy błędy (XOR)
+    # psujemy sygnał XORem
     corrupted = encoded_bits ^ error_mask
     return corrupted
 
 
 if __name__ == "__main__":
-    # 1. Konfiguracja
+    # 1. Odpalamy maszyny
     enc = ConvolutionalEncoder()
-    dec = Decoder(enc)  # Przekazujemy instancję enkodera!
+    dec = Decoder(enc)
 
-    # 2. Dane wejściowe (np. 10 bitów)
+    # 2. Generujemy losowe dane (np. 100 bitów)
     input_data = np.random.randint(0, 2, 100)
-    print(f"Dane wejściowe (długość {len(input_data)}): {input_data[:10]}...")
+    print(f"Dane wejsciowe: {input_data[:15]}... (dlugosc: {len(input_data)})")
 
-    # 3. Kodowanie
-    encoded_signal = enc.encode(input_data)
-    print(f"Zakodowane (długość {len(encoded_signal)}): {encoded_signal[:20]}...")
+    # WAŻNE: Dodajemy "Tail Bits" (Padding).
+    # Musimy dorzucic 6 zer (K-1), zeby Viterbi mogl ladnie zakonczyc prace na stanie 0.
+    # Jak tego nie zrobisz, ostatnie bity beda z dupy.
+    padding = np.zeros(enc.constraint - 1, dtype=int)
+    data_with_padding = np.concatenate((input_data, padding))
 
-    # 4. Kanał (Szum)
-    BER = 0.05  # 5% szans na błąd
+    # kodowanie
+    enc.reset()  # dla pewnosci czyscimy
+    encoded_signal = enc.encode(data_with_padding)
+    print(f"Zakodowane: {encoded_signal[:20]}... (dlugosc: {len(encoded_signal)})")
+
+    # wprowadzamy błędy
+    BER = 0.05  # 5% szans ze cos nie zadziała
     received_signal = apply_channel_noise(encoded_signal, BER)
 
-    # Policz ile błędów wpadło
+    # zlicza ile bledow wpadlo
     errors = np.sum(encoded_signal != received_signal)
-    print(f"Szum w kanale: wprowadzono {errors} błędów.")
+    print(f"kanal dorzucil {errors} bledow")
 
-    # 5. Dekodowanie
-    decoded_data = dec.decode(received_signal)
-    print(f"Zdekodowane: {decoded_data[:10]}...")
+    # dekodowanie viterbiego
+    decoded_full = dec.decode(received_signal)
 
-    # 6. Weryfikacja
-    # Uwaga: Viterbi może uciąć ostatnie bity jeśli nie ma flushingu,
-    # więc porównujemy tyle, ile odzyskaliśmy.
-    length = min(len(input_data), len(decoded_data))
-    bit_errors = np.sum(input_data[:length] != decoded_data[:length])
+    # odcinamy 6 zer, ktore byly dodane do wyczyszczenia rejestru
+    decoded_data = decoded_full[:len(input_data)]
+
+    print(f"Zdekodowane: {decoded_data[:15]}...")
+
+    # sprawdzanie poprawności długości sygnału
+    bit_errors = np.sum(input_data != decoded_data)
 
     print("-" * 30)
     if bit_errors == 0:
-        print("SUKCES! Wiadomość odzyskana bezbłędnie.")
+        print(f"SUKCES - wsyzstko odzyskane")
     else:
-        print(f"PORAŻKA. Pozostało błędów: {bit_errors}")
+        print(f"Dekodowanie w pełni nie udało się - postalo {bit_errors} bledow")
