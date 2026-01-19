@@ -1,5 +1,5 @@
 import numpy as np
-
+# unused files
 
 def scrambler(bits, seed=0b1011101):
     # scrambler with polynomial x^7 + x^4 + 1
