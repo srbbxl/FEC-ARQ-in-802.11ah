@@ -39,9 +39,12 @@ class Decoder:
                 new_state_int = int("".join(str(x) for x in new_state_bits), 2)
                 self.next_state_table[state][input_bit] = new_state_int
 
+                # zapisujemy to w "legendzie" mapy
+                self.input_bit_table[state][new_state_int] = input_bit
+
     def decode(self, received_bits):
         # sprawdzamy długośc, musi być podzielna przez 2, bo rate 1/2
-        if received_bits % 2 != 0:
+        if len(received_bits) % 2 != 0:
             received_bits = received_bits[:-1]
 
         # ilosc krokow czasowych
