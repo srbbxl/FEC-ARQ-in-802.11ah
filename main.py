@@ -2,6 +2,8 @@ import numpy as np
 from encoder import ConvolutionalEncoder
 from decoder import Decoder
 
+FRAME_SIZE = 18432
+BIT_ERROR_RATE = 0.15
 
 def apply_channel_noise(encoded_bits, ber):
     # losujemy wartosci 0-1 dla kazdego bitu
@@ -18,7 +20,7 @@ if __name__ == "__main__":
     dec = Decoder(enc)
 
     # generacja losowych danych
-    input_data = np.random.randint(0, 2, 100)
+    input_data = np.random.randint(0, 2, FRAME_SIZE)
     print(f"Dane wejsciowe: {input_data[:15]}... (dlugosc: {len(input_data)})")
 
     # dodanie tail bits, aby wyczyscic rejestr po operacji
@@ -31,7 +33,7 @@ if __name__ == "__main__":
     print(f"zakodowane: {encoded_signal[:20]} (dlugosc: {len(encoded_signal)})")
 
     # wprowadzanie błędóœ do sygnału
-    BER = 0.05  # 5% szans ze cos nie zadziała
+    BER = BIT_ERROR_RATE  # procent szans ze cos nie zadziała
     received_signal = apply_channel_noise(encoded_signal, BER)
 
     # zliczanie ilości błędów
